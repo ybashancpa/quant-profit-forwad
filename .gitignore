@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 data/etf_prices.csv
 .venv/
+forward/email_preview.html
