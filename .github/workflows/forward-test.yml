@@ -19,6 +19,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - uses: actions/setup-python@v6
         with:
@@ -40,8 +43,25 @@ jobs:
           git config user.email "forward-bot@users.noreply.github.com"
           git add forward/
           if ! git diff --cached --quiet; then
-            git commit -m "forward: $(date -u +%Y-%m-%d) run"
-            git push
+            # Get branch name (e.g. "main")
+            BRANCH=${GITHUB_REF#refs/heads/}
+            # Ensure we have remote refs and history
+            git fetch origin "$BRANCH" --no-tags
+            # Try to rebase our local changes on top of remote branch (use autostash)
+            if git rebase --autostash "origin/$BRANCH"; then
+              # autostash restores changes unstaged; re-stage forward/ before committing
+              git add forward/
+              if ! git diff --cached --quiet; then
+                git commit -m "forward: $(date -u +%Y-%m-%d) run"
+                # push the rebased commit
+                git push origin "$BRANCH"
+              else
+                echo "No changes to commit after rebase"
+              fi
+            else
+              echo "Warning: rebase failed; aborting rebase and skipping push to avoid non-fast-forward."
+              git rebase --abort || true
+            fi
           else
             echo "No state changes to commit"
           fi
