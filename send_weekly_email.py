@@ -24,7 +24,7 @@ from email.utils import formatdate
 import pandas as pd
 
 FORWARD_DIR = os.environ.get("FORWARD_DIR", "forward")
-GMAIL_USER = os.environ.get("GMAIL_USER", "ybashan.cpa@gmail.com")
+GMAIL_USER = (os.environ.get("GMAIL_USER") or "ybashan.cpa@gmail.com").strip()
 TO_ADDR = os.environ.get("REPORT_TO", GMAIL_USER)
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
