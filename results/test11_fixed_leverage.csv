@@ -1,0 +1,5 @@
+part,strategy,financing,cagr,sharpe,max_dd,ann_vol,turnover,avg_gross
+2_fixed_leverage,RP_1.0x,T-bill,5.69,0.871,-16.5,6.61,0.35698141852021864,0.987619240917394
+2_fixed_leverage,RP_1.25x,T-bill,6.48,0.802,-20.58,8.26,0.44622677315027337,1.2345240511467424
+2_fixed_leverage,RP_1.5x,T-bill,7.25,0.756,-24.49,9.91,0.5354721277803279,1.4814288613760909
+2_fixed_leverage,RP_1.25x,Fixed 3% (stress),6.3,0.781,-20.6,8.26,0.44622677315027337,1.2345240511467424

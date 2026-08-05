@@ -1,0 +1,59 @@
+name: forward-paper-test
+
+on:
+  schedule:
+    # 22:30 UTC = after US market close (16:30 ET during DST, 17:30 ET winter)
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forward-test
+  cancel-in-progress: false
+
+jobs:
+  run-forward:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python test_forward_engine.py
+
+      - name: Run forward paper test
+        run: python forward_test.py
+
+      - name: Commit state/logs/report if changed
+        run: |
+          git config user.name "forward-bot"
+          git config user.email "forward-bot@users.noreply.github.com"
+          git add forward/
+          if ! git diff --cached --quiet; then
+            git commit -m "forward: $(date -u +%Y-%m-%d) run"
+            git push
+          else
+            echo "No state changes to commit"
+          fi
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forward-report
+          path: |
+            forward/report.html
+            forward/summary.json
+            forward/nav_history.csv
+            forward/trades.csv
+            forward/runs.csv

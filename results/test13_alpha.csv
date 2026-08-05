@@ -1,0 +1,3 @@
+label,alpha_ann_pct,alpha_t,beta,r2,n
+FULL,5.4,2.74,0.045,0.009,4927
+OOS,4.02,1.5,0.071,0.024,2158

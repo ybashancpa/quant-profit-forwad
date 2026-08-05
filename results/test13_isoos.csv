@@ -1,0 +1,13 @@
+period,strategy,cagr,sharpe,max_dd
+IS,Adaptive,6.35,0.697,-19.55
+IS,RiskParity,5.63,0.885,-16.5
+IS,EscapeSHY,4.68,1.001,-7.81
+IS,EscapeIEF,6.5,1.012,-10.4
+IS,SAE_IStrained,5.39,0.806,-18.09
+IS,SPY,8.16,0.492,-55.19
+OOS,Adaptive,4.87,0.583,-19.7
+OOS,RiskParity,5.79,0.866,-16.37
+OOS,EscapeSHY,3.2,0.683,-11.76
+OOS,EscapeIEF,3.55,0.574,-18.67
+OOS,SAE_IStrained,6.03,0.89,-15.92
+OOS,SPY,14.82,0.818,-33.72

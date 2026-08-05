@@ -1,0 +1,5 @@
+strategy,full_cagr,full_sharpe,full_max_dd,oos_cagr,oos_sharpe,oos_max_dd,oos_beats_spy_cagr,oos_beats_spy_sharpe,double_digit_full,double_digit_oos,dd_pass_full,dd_pass_oos,full_turnover,full_avg_gross_exposure,full_financing_drag_pct
+StaticLowVol,7.26,0.762,-27.57,7.92,0.855,-19.69,False,True,False,False,False,True,0.025573371219809217,0.9959407347270144,0.0
+RiskParity,5.69,0.871,-16.5,5.79,0.866,-16.37,False,True,False,False,True,True,0.35698141852021864,0.987619240917394,1.6838382540148209e-15
+RP_VolTarget,6.46,0.721,-24.37,6.48,0.704,-22.63,False,False,False,False,True,True,0.6548906743346642,1.442774428106044,26.208923896172376
+DefensiveVT,5.73,0.769,-17.45,5.81,0.771,-17.45,False,False,False,False,True,True,0.9605013870332103,1.355961819033711,21.116950980703503

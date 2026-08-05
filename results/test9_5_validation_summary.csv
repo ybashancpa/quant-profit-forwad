@@ -1,0 +1,2 @@
+bootstrap_p_value,bootstrap_ci_lower,bootstrap_ci_upper,observed_sharpe_diff,sharpe_at_50bps_vol,sharpe_at_50bps_matched,diff_at_50bps,bootstrap_pass,cost_50bps_pass
+0.1672,-0.0773030976091666,0.2598022153235672,0.08524857704081623,0.936,0.883,0.05300000000000005,False,True

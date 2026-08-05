@@ -1,0 +1,2 @@
+winner_config,is_sharpe,is_cagr,is_max_dd,oos_sharpe,oos_cagr,oos_max_dd,spy_oos_sharpe,6040_oos_sharpe
+DualMom 6M/MA150,0.823,10.75,-17.88,0.791,9.41,-15.06,0.79,0.837

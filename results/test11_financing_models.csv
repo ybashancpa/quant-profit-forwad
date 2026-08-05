@@ -1,0 +1,4 @@
+part,strategy,financing,cagr,sharpe,max_dd,financing_drag_pct
+1_financing_model,RP_VolTarget,Fixed 3% (retail),6.46,0.721,-24.37,26.208923896172376
+1_financing_model,RP_VolTarget,Fixed 1.5% (flat),7.17,0.794,-24.12,13.104461948086188
+1_financing_model,RP_VolTarget,Dynamic T-bill,6.84,0.761,-24.49,19.104538346884308

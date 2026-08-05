@@ -1,0 +1,4 @@
+comparison,obs_diff,p_value,ci_low,ci_high
+Adaptive-SAE_IStrained,-0.307,0.8909,-0.815,0.178
+Adaptive-RiskParity,-0.283,0.8571,-0.826,0.225
+Adaptive-EscapeSHY,-0.1,0.6394,-0.6,0.412

@@ -1,0 +1,22 @@
+crisis,strategy,return_pct,max_dd_pct
+2008 Financial Crisis,StaticLowVol,-17.13,-27.57
+2008 Financial Crisis,RiskParity,-4.84,-16.5
+2008 Financial Crisis,RP_VolTarget,-10.47,-24.37
+2008 Financial Crisis,DefensiveVT,-2.67,-12.08
+2008 Financial Crisis,SPY,-43.9,-51.87
+2008 Financial Crisis,60_40,-22.47,-30.79
+2008 Financial Crisis,SmartPassive,10.73,-4.54
+2020 Corona Crash,StaticLowVol,-1.67,-15.65
+2020 Corona Crash,RiskParity,-2.16,-12.19
+2020 Corona Crash,RP_VolTarget,-5.89,-17.98
+2020 Corona Crash,DefensiveVT,-3.77,-11.71
+2020 Corona Crash,SPY,-9.18,-33.72
+2020 Corona Crash,60_40,-1.69,-19.13
+2020 Corona Crash,SmartPassive,-0.61,-6.74
+2022 Inflation/Rates,StaticLowVol,-14.5,-19.3
+2022 Inflation/Rates,RiskParity,-11.96,-16.08
+2022 Inflation/Rates,RP_VolTarget,-17.65,-22.13
+2022 Inflation/Rates,DefensiveVT,-15.03,-16.92
+2022 Inflation/Rates,SPY,-18.18,-24.5
+2022 Inflation/Rates,60_40,-16.39,-20.67
+2022 Inflation/Rates,SmartPassive,-18.32,-19.0

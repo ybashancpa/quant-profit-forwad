@@ -1,0 +1,5 @@
+period,n_days,alpha_annualized_pct,alpha_daily,alpha_tstat,alpha_significant,beta,beta_tstat,beta_le_1_5,r2,ann_return_pct,beta_explained_ann_pct,beta_share_of_return_pct
+FULL,4927,7.28,0.0002890132698601241,2.993,True,0.298,6.087,True,0.193,10.99,3.7,33.7
+IS (2007-2017),2769,8.77,0.0003480161891362568,2.617,True,0.24,3.453,True,0.126,11.13,2.36,21.2
+OOS (2018+),2158,4.83,0.00019158166252854884,1.481,False,0.379,7.15,True,0.312,10.8,5.98,55.3
+SmartPassive FULL,4927,5.41,0.00021468819466222773,4.006,True,0.177,5.135,True,0.229,7.61,2.2,28.9

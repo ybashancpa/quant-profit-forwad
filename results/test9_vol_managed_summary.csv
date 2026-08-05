@@ -1,0 +1,2 @@
+vol_managed_cagr,vol_managed_sharpe,vol_managed_max_dd,vol_managed_turnover,vol_managed_avg_spy_exposure,static_sharpe,smart_sharpe,matched_sharpe,beats_static,beats_smart,beats_matched,passes_dd
+8.07,0.971,-17.32,0.36335145290026516,0.4801528904141627,0.847,1.049,0.885,True,False,True,True
