@@ -24,8 +24,9 @@ from email.utils import formatdate
 import pandas as pd
 
 FORWARD_DIR = os.environ.get("FORWARD_DIR", "forward")
+# Use `or` so an empty/unset secret still falls back to the default address.
 GMAIL_USER = (os.environ.get("GMAIL_USER") or "ybashan.cpa@gmail.com").strip()
-TO_ADDR = os.environ.get("REPORT_TO", GMAIL_USER)
+TO_ADDR = (os.environ.get("REPORT_TO") or GMAIL_USER).strip()
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -115,6 +116,8 @@ def send(html, total_ret):
     app_pw = os.environ.get("GMAIL_APP_PASSWORD")
     if not app_pw:
         raise RuntimeError("GMAIL_APP_PASSWORD env var not set")
+    if not GMAIL_USER:
+        raise RuntimeError("GMAIL_USER is empty; set the GMAIL_USER secret")
     msg = MIMEMultipart("alternative")
     msg["Subject"] = (f"SmartPassive Weekly: NAV ${json.load(open(os.path.join(FORWARD_DIR,'state.json')))['nav']:,.0f} "
                       f"({total_ret:+.2f}%)")
@@ -126,7 +129,7 @@ def send(html, total_ret):
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context) as server:
         server.login(GMAIL_USER, app_pw.replace(" ", ""))
-        server.sendmail(GMAIL_USER, [a.strip() for a in TO_ADDR.split(",")],
+        server.sendmail(GMAIL_USER, [a.strip() for a in TO_ADDR.split(",") if a.strip()],
                         msg.as_string())
     print(f"[EMAIL SENT] to {TO_ADDR}")
 
