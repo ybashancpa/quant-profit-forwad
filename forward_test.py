@@ -77,6 +77,16 @@ def provenance():
     Untracked build/data artifacts must not flip the flag, otherwise it becomes
     permanent noise that everyone ignores (the usual way warnings die). A true
     `dirty` therefore means the code that ran differs from the committed code.
+
+    `hypothesis_sha256` hashes the COMMITTED blob (git show HEAD:<file>), not
+    the working-tree file. A preregistration seal must be a property of the
+    content, not of the checkout: reading from disk hashes line-ending-converted
+    bytes, so the same commit yields different hashes on Windows (CRLF via
+    core.autocrlf) vs Linux (LF). The blob is the one canonical representation,
+    identical on every platform. This does NOT change the CI value: on Linux the
+    worktree already equals the blob, so the stamped hash is unchanged run-to-run
+    (it only fixes off-CI/Windows verification). If the file is not in HEAD
+    (uncommitted), there is no canonical seal yet and the field is left empty.
     """
     prov = {"commit": "", "dirty": None, "hypothesis_sha256": ""}
     try:
@@ -91,9 +101,11 @@ def provenance():
         prov["commit"] = ""
         prov["dirty"] = None
     try:
-        if os.path.exists(HYPOTHESIS_FILE):
-            with open(HYPOTHESIS_FILE, "rb") as f:
-                prov["hypothesis_sha256"] = hashlib.sha256(f.read()).hexdigest()
+        blob = subprocess.run(
+            ["git", "show", f"HEAD:{HYPOTHESIS_FILE}"],
+            capture_output=True, timeout=10)  # bytes (no text=): hash raw blob
+        if blob.returncode == 0:
+            prov["hypothesis_sha256"] = hashlib.sha256(blob.stdout).hexdigest()
     except Exception:
         prov["hypothesis_sha256"] = ""
     return prov

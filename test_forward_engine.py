@@ -238,6 +238,46 @@ class TestProvenanceTiming(unittest.TestCase):
             ft.HYPOTHESIS_FILE = old_hyp
             shutil.rmtree(sbx, ignore_errors=True)
 
+    def test_hypothesis_hash_is_committed_blob_not_worktree(self):
+        """
+        hypothesis_sha256 must hash the COMMITTED blob (git show HEAD:<file>),
+        not the working-tree file. Otherwise the seal depends on the checkout's
+        line endings: the same commit hashes differently on Windows (CRLF via
+        core.autocrlf) vs Linux (LF). Fails on the pre-fix code that read the
+        file from disk.
+        """
+        import hashlib as _h
+        sbx = tempfile.mkdtemp(prefix="fwdhyp_")
+        old_cwd = os.getcwd()
+        old_hyp = ft.HYPOTHESIS_FILE
+        body = "# locked hypothesis (sandbox)\nsecond line\n"
+        lf = body.encode("utf-8")
+        crlf = body.replace("\n", "\r\n").encode("utf-8")
+        try:
+            self._git(["init", "-q"], sbx)
+            self._git(["config", "user.email", "t@t"], sbx)
+            self._git(["config", "user.name", "t"], sbx)
+            self._git(["config", "core.autocrlf", "false"], sbx)  # LF blob, exactly
+            hyp = os.path.join(sbx, "SMARTPASSIVE_hypothesis.md")
+            with open(hyp, "wb") as f:
+                f.write(lf)                       # commit an LF blob
+            self._git(["add", "-A"], sbx)
+            self._git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=",
+                       "commit", "-q", "-m", "init"], sbx)
+            with open(hyp, "wb") as f:
+                f.write(crlf)                     # worktree now CRLF (uncommitted)
+            os.chdir(sbx)
+            ft.HYPOTHESIS_FILE = "SMARTPASSIVE_hypothesis.md"
+            got = ft.provenance()["hypothesis_sha256"]
+            self.assertEqual(got, _h.sha256(lf).hexdigest(),
+                             "must hash the committed LF blob")
+            self.assertNotEqual(got, _h.sha256(crlf).hexdigest(),
+                                "must NOT hash the CRLF working-tree bytes")
+        finally:
+            os.chdir(old_cwd)
+            ft.HYPOTHESIS_FILE = old_hyp
+            shutil.rmtree(sbx, ignore_errors=True)
+
     def test_run_stamps_dirty_false_despite_own_writes(self):
         """
         The regression test proper: run() on a CLEAN tracked tree must stamp
