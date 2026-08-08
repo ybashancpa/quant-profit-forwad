@@ -6,6 +6,7 @@ Run: python test_forward_engine.py
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -171,6 +172,125 @@ class TestEndToEnd(unittest.TestCase):
         with open(ft.SUMMARY_FILE, "r", encoding="utf-8") as f:
             summary = json.load(f)
         self.assertIn("nav", summary)
+
+
+class TestProvenanceTiming(unittest.TestCase):
+    """
+    Guards the provenance-timing fix: `dirty` must reflect the tree as it was
+    at run START, not after run() has written its own (tracked) forward/
+    artifacts.
+
+    This requires a throwaway git repo whose forward/ files are TRACKED. If
+    FORWARD_DIR sits outside a git repo -- as the other e2e tests do -- run()'s
+    writes never touch the git worktree, so `git status` stays clean and
+    `dirty` is False even WITH the bug. Such a test would pass either way and
+    prove nothing (exactly the failure mode we are guarding against).
+    """
+
+    def _git(self, args, cwd):
+        subprocess.run(["git", *args], cwd=cwd, check=True,
+                       capture_output=True, text=True)
+
+    def _make_sandbox(self):
+        """A git repo with tracked, clean forward/ CSVs and a hypothesis doc."""
+        sbx = tempfile.mkdtemp(prefix="fwdprov_")
+        fwd = os.path.join(sbx, "forward")
+        os.makedirs(fwd)
+        # Empty, tracked, append-only CSVs -> run()'s append_csv() adds rows ->
+        # tracked file is modified, which is what would flip `dirty` if captured
+        # too late. nav_history.csv is deliberately excluded: run() *reads* it
+        # via pd.read_csv(), which errors on a 0-byte file; run() creates it
+        # fresh (untracked) instead, which is fine for the dirty check.
+        for name in ("signals.csv", "trades.csv", "runs.csv"):
+            open(os.path.join(fwd, name), "w").close()
+        with open(os.path.join(sbx, "SMARTPASSIVE_hypothesis.md"), "w",
+                  encoding="utf-8") as f:
+            f.write("# locked hypothesis (sandbox fixture)\n")
+        self._git(["init", "-q"], sbx)
+        self._git(["config", "user.email", "t@t"], sbx)
+        self._git(["config", "user.name", "t"], sbx)
+        self._git(["add", "-A"], sbx)
+        # gpgsign=false / empty hooksPath keep the fixture hermetic on dev
+        # machines that sign or hook by default; this is a throwaway repo, not
+        # one of the user's commits.
+        self._git(["-c", "commit.gpgsign=false", "-c", "core.hooksPath=",
+                   "commit", "-q", "-m", "init"], sbx)
+        return sbx, fwd
+
+    def test_provenance_primitive_clean_then_dirty(self):
+        """provenance(): clean tree -> dirty False; touch tracked file -> True."""
+        sbx, fwd = self._make_sandbox()
+        old_cwd = os.getcwd()
+        old_hyp = ft.HYPOTHESIS_FILE
+        try:
+            os.chdir(sbx)
+            ft.HYPOTHESIS_FILE = "SMARTPASSIVE_hypothesis.md"
+            prov = ft.provenance()
+            self.assertNotEqual(prov["commit"], "")
+            self.assertFalse(prov["dirty"])            # clean committed tree
+            self.assertNotEqual(prov["hypothesis_sha256"], "")
+            # Modify a TRACKED file, leave it uncommitted.
+            with open(os.path.join(fwd, "runs.csv"), "a", encoding="utf-8") as f:
+                f.write("touch\n")
+            self.assertTrue(ft.provenance()["dirty"])  # tracked change -> dirty
+        finally:
+            os.chdir(old_cwd)
+            ft.HYPOTHESIS_FILE = old_hyp
+            shutil.rmtree(sbx, ignore_errors=True)
+
+    def test_run_stamps_dirty_false_despite_own_writes(self):
+        """
+        The regression test proper: run() on a CLEAN tracked tree must stamp
+        dirty=False in summary.json EVEN THOUGH run() then modifies tracked
+        forward/ files. Fails on the pre-fix code (provenance captured after
+        the writes).
+        """
+        sbx, fwd = self._make_sandbox()
+        old_cwd = os.getcwd()
+        saved = (ft.FORWARD_DIR, ft.STATE_FILE, ft.NAV_FILE, ft.TRADES_FILE,
+                 ft.SIGNALS_FILE, ft.RUNS_FILE, ft.REPORT_FILE, ft.SUMMARY_FILE,
+                 ft.HYPOTHESIS_FILE, ft.load_prices)
+        try:
+            os.chdir(sbx)
+            ft.FORWARD_DIR = fwd
+            ft.STATE_FILE = os.path.join(fwd, "state.json")
+            ft.NAV_FILE = os.path.join(fwd, "nav_history.csv")
+            ft.TRADES_FILE = os.path.join(fwd, "trades.csv")
+            ft.SIGNALS_FILE = os.path.join(fwd, "signals.csv")
+            ft.RUNS_FILE = os.path.join(fwd, "runs.csv")
+            ft.REPORT_FILE = os.path.join(fwd, "report.html")
+            ft.SUMMARY_FILE = os.path.join(fwd, "summary.json")
+            ft.HYPOTHESIS_FILE = "SMARTPASSIVE_hypothesis.md"
+            ft.load_prices = lambda end_date=None: make_prices(
+                spy_trend="up", end="2025-06-30")
+
+            ft.run()  # bootstrap: appends to the tracked CSVs committed above
+
+            # Teeth check: run() really did dirty tracked files. If this is
+            # empty the test is toothless (late-captured provenance would also
+            # read clean), so assert the precondition that makes the fix matter.
+            status = subprocess.run(
+                ["git", "status", "--porcelain", "--untracked-files=no"],
+                cwd=sbx, capture_output=True, text=True).stdout.strip()
+            self.assertNotEqual(
+                status, "", "run() did not modify any tracked file; test is toothless")
+
+            with open(ft.SUMMARY_FILE, "r", encoding="utf-8") as f:
+                summary = json.load(f)
+            self.assertIn("provenance", summary)
+            prov = summary["provenance"]
+            self.assertNotEqual(prov["commit"], "")
+            self.assertNotEqual(prov["hypothesis_sha256"], "")
+            # The fix: captured before writes -> False despite run()'s own edits.
+            self.assertFalse(
+                prov["dirty"],
+                "dirty must reflect the tree at run start, not run()'s own writes")
+        finally:
+            os.chdir(old_cwd)
+            (ft.FORWARD_DIR, ft.STATE_FILE, ft.NAV_FILE, ft.TRADES_FILE,
+             ft.SIGNALS_FILE, ft.RUNS_FILE, ft.REPORT_FILE, ft.SUMMARY_FILE,
+             ft.HYPOTHESIS_FILE, ft.load_prices) = saved
+            shutil.rmtree(sbx, ignore_errors=True)
 
 
 if __name__ == "__main__":
