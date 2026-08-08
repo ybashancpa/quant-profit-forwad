@@ -1,12 +1,16 @@
 {
-  "experiment_id": "smartpassive-forward-v1",
+  "experiment_id": "smartpassive-forward-v2",
   "asof": "2026-08-07",
   "status": "HOLD(not month-end)",
   "regime": "RISK_ON",
   "spy_price": 773.260009765625,
   "ma200": 700.1296835327148,
   "nav": 10065.73,
+  "after_tax_nav": 10046.8,
+  "bench_nav": 10065.73,
+  "bench_after_tax_nav": 10046.8,
   "total_return_pct": 0.657,
+  "bench_return_pct": 0.657,
   "spy_bench_return_pct": 0.25,
   "n_trades": 0,
   "holdings": {
@@ -14,5 +18,9 @@
     "IEF": 37.533512064343164,
     "GLD": 2.6726533841470252
   },
-  "cash": -10.0
+  "cash": -10.0,
+  "risk_off_cycles_completed": 0,
+  "years_elapsed": 0.01,
+  "horizon_met": false,
+  "verdict": "NOT_READY"
 }

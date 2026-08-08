@@ -304,3 +304,54 @@ Files: `test12_alpha_beta.py`, `results/test12_alpha_beta.csv`.
 **VERDICT: NEGATIVE.** The rotation mechanism is real and behaved adaptively in every known crisis — but the timing adds no OOS value: adaptive rotation does NOT beat its own static average composition (the SAE control), nor plain risk parity, nor escaping to SHY. The switching costs and detector lag consume the crisis gains in aggregate. Per the pre-registered decision rule, the "adaptivity" is a composition effect: holding the defensive mix statically does the same job, more cheaply.
 
 Files: `test13_adaptive_crisis_rotation.py`, `results/test13_isoos.csv`, `results/test13_bootstrap.csv`, `results/test13_sensitivity.csv`, `results/test13_crisis.csv`, `results/test13_alpha.csv`, `results/test13_addendum.csv`, `results/test13_escape_log.csv`.
+
+---
+
+## Addendum: Test 14 — Options Income / Premium Selling Evidence Audit (August 2026)
+
+**Question:** do option premium-selling strategies produce a sustained positive expectation after commissions, spreads, slippage and tax for a private Israeli account of $5k–$50k? Full critical report (Hebrew): `OPTIONS_INCOME_RESEARCH.md`.
+
+**Evidence collected:**
+- Full-history (2002–2026) measurement of the Cboe PUT and BXM benchmark indices vs SPX/SPY-TR/SHY; direct VRP measurement (VIX² vs forward 21-day realized variance, monthly); tail-event windows (2008, Volmageddon 2018, Mar 2020, 2022, Aug 2024); IBKR retail cost model; account-size feasibility under a 2% risk cap; Israeli 25% capital-gains wedge.
+- Academic anchor: Dew-Becker & Giglio (Chicago Fed WP 2025-17, and June 2026 version) — S&P 500 option alphas became statistically indistinguishable from zero after ~2012; synthetic options never had negative alpha over ~100 years; VIX has converged to realized vol on average.
+
+**Key measurements (our own, reproducible in `test14_options_income.py`):**
+
+| Series (2002–2026) | CAGR | Sharpe | Max DD |
+|---|---|---|---|
+| PUT (Cboe PutWrite) | 7.43% | 0.532 | -37.1% |
+| BXM (Cboe BuyWrite) | 6.16% | 0.493 | -40.1% |
+| SPY total return | 10.00% | 0.598 | -55.2% |
+
+- Sub-periods: PUT beat the index 2002–2012 (the VRP era), lost clearly 2013–2019 (6.99% vs 14.20% SPY-TR) and 2020–2026 (9.45% vs 15.62%).
+- Rolling 10-year windows: PUT beats SPY-TR in only 13.1% of windows (6.7% for windows ending 2013+); BXM in 4.0%.
+- Pure premium component (PUT − T-bill): +7.2%/yr, positive in 73% of months — real, but it is the compensation for the tail: PUT lost -28.9% in 23 trading days in Mar 2020 (1.6× the prior three years of cumulative gains) and -34.8% peak-to-trough in GFC.
+- VRP itself: still positive on average (~1 variance point; IV>RV in 84% of months) but small, and per the academic evidence no longer convertible into significant hedged alpha.
+- Retail costs (IBKR fixed): $4.11 / $6.81 / $13.63 round-trip per 1/2/4-leg structure at 1-tick half-spread = 23–34% of a typical $1-wide spread credit; ~1.6%/yr account drag at monthly frequency.
+- Granularity: one cash-secured SPY put requires ~$77k collateral (Aug-2026 price) — infeasible for the entire $5k–$50k range; only defined-risk $1-wide spreads fit a 2% risk cap, and costs consume most of the credit.
+
+**VERDICT: NEGATIVE for the stated account size.** The raw premium harvest exists but (a) the exploitable hedged alpha disappeared around 2012, (b) the benchmark selling indices underperform holding the index in 87–96% of rolling 10-year windows before costs and tax, and (c) costs + granularity + 25% tax eliminate the theoretical edge for accounts below ~$25k–$50k (and cash-secured index structures below ~$77k). Falsification criteria were pre-committed in the report and are already failed by existing data.
+
+Files: `test14_options_income.py`, `OPTIONS_INCOME_RESEARCH.md`, `results/test14_*.csv`, primary sources in `research_sources/`.
+
+---
+
+## Addendum: Test 15 — Intraday Micro-Futures Edge Evidence Audit (August 2026)
+
+**Question:** is there a sustained, exploitable intraday edge in any of 15 CME micro futures contracts (MES, MNQ, MYM, M2K, MCL, MGC, SIL, MBT, MET, MSL, MXR, M6E, M6B, M6A, MJY) after commissions, spreads and slippage, for a $5k–$50k private account? Full critical report (Hebrew): `MICRO_FUTURES_RESEARCH.md`.
+
+**Evidence collected:**
+- The Momentum-Pullback strategy (VWAP direction + ADX>25 on 15m + EMA20/50 1h context + EMA20-touch trigger) was run on real contract data, RTH only, Jun–Aug 2026 (41 trading days): ~56 configurations (15 instruments × 4 stop multipliers). Raw result: **6 profitable, 50 losing** (MYM: 8 trades, -$104; M2K: 14 trades, -$212).
+- Multiple-testing audit, statistical-power analysis, per-instrument IBKR cost model, capital feasibility under a 1–2% risk cap, and the passive alternative over the same window.
+
+**Key measurements (our own, reproducible in `test15_micro_futures.py`):**
+- **Sign test: 6/56 profitable.** Under a zero-edge null ~28/56 should be profitable before costs; P(≤6 | null) = **5.1e-10**. The family underperforms random chance — a statistically significant negative signal, not noise.
+- **Deflated Sharpe:** with 56 trials the expected best noise t-stat is ≈2.32; with only 8–14 trades per instrument even a 0.30 per-trade Sharpe cannot pass the deflated test.
+- **Power:** detecting a true 0.10 per-trade Sharpe needs ~1,580 trades (Bonferroni, 80% power); 0.20 needs ~400. The 41-day sample (8–14 trades) can only detect an implausibly large edge (>0.5/trade).
+- **Costs (round trip, 1 contract):** MES $2.27 (1.8 ticks), MNQ $1.56 (3.1), MYM/M2K $1.52 (3.0), MCL/MGC $2.04 (2.0), MBT $3.50 (7.0), SIL $6.10, MSL/MXR $6.10+ (thin). Every trade must clear 1.8–3.1 ticks of gross edge just to break even, before stop slippage.
+- **Capital:** $5k suffices for the index micros at 1% risk (MES needs ~$2,500, MNQ/MYM/M2K ~$1,000 at a 20-tick stop); SIL needs ~$10k. Capital is NOT the binding constraint — the absence of edge is.
+- **Passive bar:** SPY returned **+1.58%** over the same window (Jun 1 – Aug 6, 2026) with zero effort.
+
+**VERDICT: NEGATIVE.** No exploitable intraday edge was found. The tested family loses systematically (worse than chance), costs consume 1.8–3.1 ticks before any edge, the sample is far too small to certify a small positive edge, and the passive alternative wins the window. Recommendation: do not deploy intraday micro-futures momentum-pullback trading; capital is better allocated to the passive/vol-managed strategies validated in Tests 1–13.
+
+Files: `test15_micro_futures.py`, `MICRO_FUTURES_RESEARCH.md`, `results/test15_*.csv`.

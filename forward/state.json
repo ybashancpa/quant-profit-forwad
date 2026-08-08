@@ -1,5 +1,5 @@
 {
-  "experiment_id": "smartpassive-forward-v1",
+  "experiment_id": "smartpassive-forward-v2",
   "config_hash": "235aa15209ad",
   "start_date": "2026-08-04",
   "start_capital": 10000.0,
@@ -14,5 +14,72 @@
   "last_run_date": "2026-08-07",
   "last_trade_month": "2026-08",
   "nav": 10065.73133867773,
-  "spy_bench_nav": 10025.021620227655
+  "spy_bench_nav": 10025.021620227655,
+  "tax_lots": {
+    "SPY": [
+      {
+        "shares": 7.130541,
+        "cost_basis": 771.33,
+        "date": "2026-08-04"
+      }
+    ],
+    "IEF": [
+      {
+        "shares": 37.533512,
+        "cost_basis": 93.25,
+        "date": "2026-08-04"
+      }
+    ],
+    "GLD": [
+      {
+        "shares": 2.672653,
+        "cost_basis": 374.16,
+        "date": "2026-08-04"
+      }
+    ]
+  },
+  "loss_carryforward": 0.0,
+  "total_realized_tax": 0.0,
+  "risk_off_cycles": [],
+  "current_risk_off_entry": null,
+  "benchmark": {
+    "start_date": "2026-08-04",
+    "start_capital": 10000.0,
+    "cash": -10.0,
+    "shares": {
+      "SPY": 7.130540596294939,
+      "IEF": 37.533512064343164,
+      "GLD": 2.6726533841470252
+    },
+    "total_costs": 10.0,
+    "tax_lots": {
+      "SPY": [
+        {
+          "shares": 7.130541,
+          "cost_basis": 771.33,
+          "date": "2026-08-04"
+        }
+      ],
+      "IEF": [
+        {
+          "shares": 37.533512,
+          "cost_basis": 93.25,
+          "date": "2026-08-04"
+        }
+      ],
+      "GLD": [
+        {
+          "shares": 2.672653,
+          "cost_basis": 374.16,
+          "date": "2026-08-04"
+        }
+      ]
+    },
+    "loss_carryforward": 0.0,
+    "total_realized_tax": 0.0,
+    "last_trade_month": "2026-08",
+    "nav": 10065.73133867773,
+    "after_tax_nav": 10046.798473235032
+  },
+  "after_tax_nav": 10046.798473235032
 }

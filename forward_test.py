@@ -32,16 +32,21 @@ import pandas as pd
 # LOCKED CONFIGURATION (do not tune during the experiment)
 # ============================================================
 CONFIG = {
-    "experiment_id": "smartpassive-forward-v1",
+    "experiment_id": "smartpassive-forward-v2",
     "config_hash": "",  # filled below
     "start_capital": 10_000.0,
     "tickers": ["SPY", "IEF", "GLD", "SHY"],
     "risk_on": {"SPY": 0.55, "IEF": 0.35, "GLD": 0.10},
     "risk_off": {"SHY": 0.55, "IEF": 0.35, "GLD": 0.10},
+    "static_benchmark": {"SPY": 0.55, "IEF": 0.35, "GLD": 0.10},
     "ma_lookback": 200,
     "cost_per_side": 0.001,
     "tolerance": 0.03,
     "history_days": 750,
+    "tax_rate": 0.25,
+    "min_years": 3,
+    "min_risk_off_cycles": 2,
+    "hard_stop_date": "2034-08-04",
 }
 CONFIG["config_hash"] = hashlib.sha1(
     json.dumps({k: v for k, v in CONFIG.items() if k != "config_hash"},
@@ -148,6 +153,171 @@ def apply_trades(state, trades, date, reason):
     # drop dust
     state["shares"] = {k: v for k, v in state["shares"].items() if abs(v) > 1e-9}
     return rows
+
+
+# ============================================================
+# TAX LOT TRACKING (FIFO, 25% capital gains)
+# ============================================================
+def fifo_realize(tax_lots, shares_sold, price):
+    """
+    Realize gain/loss by selling shares_sold at price using FIFO.
+    Returns (realized_gain, remaining_lots).
+    """
+    remaining = shares_sold
+    realized = 0.0
+    new_lots = []
+    for lot in tax_lots:
+        if remaining <= 0:
+            new_lots.append(lot)
+            continue
+        sell_from_lot = min(lot["shares"], remaining)
+        gain = sell_from_lot * (price - lot["cost_basis"])
+        realized += gain
+        remaining -= sell_from_lot
+        leftover = lot["shares"] - sell_from_lot
+        if leftover > 1e-9:
+            new_lots.append({"shares": leftover, "cost_basis": lot["cost_basis"]})
+    return realized, new_lots
+
+
+def apply_tax(realized_gain, loss_carryforward, tax_rate=None):
+    """
+    Apply tax to realized gain, using loss carryforward.
+    Returns (tax_paid, remaining_carryforward).
+    """
+    if tax_rate is None:
+        tax_rate = CONFIG["tax_rate"]
+    net_gain = realized_gain - loss_carryforward
+    if net_gain <= 0:
+        return 0.0, -net_gain
+    return net_gain * tax_rate, 0.0
+
+
+def update_tax_lots(state, trades, date):
+    """Update tax lots for all trades (buys add lots, sells realize gains)."""
+    if "tax_lots" not in state:
+        state["tax_lots"] = {}
+    if "loss_carryforward" not in state:
+        state["loss_carryforward"] = 0.0
+    if "total_realized_tax" not in state:
+        state["total_realized_tax"] = 0.0
+
+    for tr in trades:
+        t = tr["ticker"]
+        if t not in state["tax_lots"]:
+            state["tax_lots"][t] = []
+
+        if tr["shares"] > 0:  # BUY
+            state["tax_lots"][t].append({
+                "shares": tr["shares"],
+                "cost_basis": tr["price"],
+                "date": str(date.date()),
+            })
+        else:  # SELL
+            shares_to_sell = -tr["shares"]
+            realized, remaining = fifo_realize(state["tax_lots"][t], shares_to_sell, tr["price"])
+            state["tax_lots"][t] = remaining
+            tax, state["loss_carryforward"] = apply_tax(realized, state["loss_carryforward"])
+            state["total_realized_tax"] += tax
+
+
+def compute_after_tax_nav(state, prices_row):
+    """
+    Compute after-tax liquidation NAV: what would remain if all positions
+    were sold now and taxes paid on unrealized gains.
+    """
+    pre_tax_nav = state["cash"] + sum(
+        state["shares"].get(t, 0.0) * prices_row[t] for t in prices_row.index)
+
+    # Compute unrealized gains for each position
+    total_unrealized = 0.0
+    for t, shares in state["shares"].items():
+        if t not in state.get("tax_lots", {}):
+            continue
+        for lot in state["tax_lots"][t]:
+            unrealized = lot["shares"] * (prices_row[t] - lot["cost_basis"])
+            total_unrealized += unrealized
+
+    # Apply tax on net unrealized gain (after loss carryforward)
+    net_gain = total_unrealized - state.get("loss_carryforward", 0.0)
+    if net_gain > 0:
+        tax_due = net_gain * CONFIG["tax_rate"]
+    else:
+        tax_due = 0.0
+
+    return pre_tax_nav - tax_due
+
+
+# ============================================================
+# STATIC BENCHMARK (55/35/10, no MA200 filter)
+# ============================================================
+def init_benchmark_state(start_date, start_capital):
+    """Initialize the static benchmark portfolio state."""
+    return {
+        "start_date": str(start_date),
+        "start_capital": start_capital,
+        "cash": start_capital,
+        "shares": {},
+        "total_costs": 0.0,
+        "tax_lots": {},
+        "loss_carryforward": 0.0,
+        "total_realized_tax": 0.0,
+        "last_trade_month": None,
+        "nav": start_capital,
+    }
+
+
+def update_benchmark(state, prices, latest, regime):
+    """
+    Update the static benchmark portfolio.
+    Uses the same rebalancing logic but with fixed weights (no regime switch).
+    """
+    if "benchmark" not in state:
+        state["benchmark"] = init_benchmark_state(latest, CONFIG["start_capital"])
+
+    bench = state["benchmark"]
+    month_key = f"{latest.year}-{latest.month:02d}"
+
+    # Rebalance on month-end (same timing as SmartPassive)
+    if (is_last_trading_day_of_month(prices.index, latest)
+            and bench.get("last_trade_month") != month_key):
+        tw = dict(CONFIG["static_benchmark"])  # Fixed weights, no regime
+        row0 = prices.loc[latest]
+        trades, drift, nav = plan_trades(bench, row0, tw)
+        if trades:
+            apply_trades(bench, trades, latest, "BENCH_REBALANCE")
+            update_tax_lots(bench, trades, latest)
+            bench["last_trade_month"] = month_key
+
+    # Mark-to-market
+    row0 = prices.loc[latest]
+    bench["nav"] = float(bench["cash"] + sum(
+        bench["shares"].get(t, 0.0) * row0[t] for t in row0.index))
+    bench["after_tax_nav"] = compute_after_tax_nav(bench, row0)
+
+
+def compute_mar_ratio(nav_series, start_capital):
+    """
+    Compute MAR ratio = CAGR / |Max Drawdown|.
+    nav_series: pd.Series of after-tax NAV values.
+    """
+    if len(nav_series) < 2:
+        return 0.0, 0.0, 0.0
+
+    # CAGR
+    years = len(nav_series) / 252
+    if years <= 0:
+        return 0.0, 0.0, 0.0
+    total_return = nav_series.iloc[-1] / start_capital
+    cagr = (total_return ** (1 / years)) - 1 if total_return > 0 else -1.0
+
+    # Max drawdown
+    cummax = nav_series.cummax()
+    dd = (nav_series - cummax) / cummax
+    max_dd = abs(dd.min()) if len(dd) > 0 else 1.0
+
+    mar = cagr / max_dd if max_dd > 0 else 0.0
+    return mar, cagr, max_dd
 
 
 # ============================================================
@@ -283,13 +453,25 @@ def run(asof=None, force=False):
             "last_trade_month": None,
             "nav": CONFIG["start_capital"],
             "spy_bench_nav": CONFIG["start_capital"],
+            "tax_lots": {},
+            "loss_carryforward": 0.0,
+            "total_realized_tax": 0.0,
+            "risk_off_cycles": [],
+            "current_risk_off_entry": None,
         }
         tw = target_weights(regime)
         row0 = prices.loc[latest]
         trades, drift, nav = plan_trades(state, row0, tw)
         trade_rows = apply_trades(state, trades, latest, "INITIAL_ALLOCATION")
+        update_tax_lots(state, trades, latest)
         state["last_trade_month"] = f"{latest.year}-{latest.month:02d}"
         status = "INITIAL_ALLOCATION"
+        # Initialize benchmark at the same time
+        state["benchmark"] = init_benchmark_state(latest, CONFIG["start_capital"])
+        bench_trades, _, _ = plan_trades(state["benchmark"], row0, dict(CONFIG["static_benchmark"]))
+        apply_trades(state["benchmark"], bench_trades, latest, "BENCH_INITIAL")
+        update_tax_lots(state["benchmark"], bench_trades, latest)
+        state["benchmark"]["last_trade_month"] = f"{latest.year}-{latest.month:02d}"
     else:
         month_key = f"{latest.year}-{latest.month:02d}"
         if (is_last_trading_day_of_month(prices.index, latest)
@@ -299,6 +481,7 @@ def run(asof=None, force=False):
             trades, drift, nav = plan_trades(state, row0, tw)
             if trades:
                 trade_rows = apply_trades(state, trades, latest, "MONTH_END_REBALANCE")
+                update_tax_lots(state, trades, latest)
                 state["last_trade_month"] = month_key
                 status = "REBALANCED"
             else:
@@ -306,22 +489,44 @@ def run(asof=None, force=False):
         else:
             status = "HOLD(not month-end)"
 
+        # Track RISK_OFF cycles
+        if regime == "RISK_OFF" and state.get("current_risk_off_entry") is None:
+            state["current_risk_off_entry"] = str(latest.date())
+        elif regime == "RISK_ON" and state.get("current_risk_off_entry") is not None:
+            state["risk_off_cycles"].append({
+                "entry": state["current_risk_off_entry"],
+                "exit": str(latest.date()),
+                "completed": False,
+            })
+            state["current_risk_off_entry"] = None
+
+        # Update benchmark
+        update_benchmark(state, prices, latest, regime)
+
     # -------- mark-to-market --------
     row0 = prices.loc[latest]
     nav = state["cash"] + sum(state["shares"].get(t, 0.0) * row0[t]
                               for t in row0.index)
     state["nav"] = float(nav)
+    state["after_tax_nav"] = compute_after_tax_nav(state, row0)
     state["spy_bench_nav"] = float(
         CONFIG["start_capital"] * spy_price / state["spy_start_price"])
     state["last_run_date"] = str(latest.date())
+
+    # Benchmark NAV
+    bench_nav = state.get("benchmark", {}).get("nav", CONFIG["start_capital"])
+    bench_after_tax = state.get("benchmark", {}).get("after_tax_nav", CONFIG["start_capital"])
 
     nav_df = read_nav_history()
     if len(nav_df) == 0 or nav_df["date"].max() < latest:
         append_csv(NAV_FILE, [{
             "date": str(latest.date()), "nav": round(nav, 2),
+            "after_tax_nav": round(state["after_tax_nav"], 2),
+            "bench_nav": round(bench_nav, 2),
+            "bench_after_tax_nav": round(bench_after_tax, 2),
             "spy_bench_nav": round(state["spy_bench_nav"], 2),
             "regime": regime}],
-            ["date", "nav", "spy_bench_nav", "regime"])
+            ["date", "nav", "after_tax_nav", "bench_nav", "bench_after_tax_nav", "spy_bench_nav", "regime"])
         nav_df = read_nav_history()
 
     append_csv(TRADES_FILE, trade_rows,
@@ -335,6 +540,30 @@ def run(asof=None, force=False):
     save_state(state)
     write_report(state, nav_df, signal_row)
 
+    # Compute criteria status
+    completed_cycles = sum(1 for c in state.get("risk_off_cycles", []) if c.get("completed"))
+    days_elapsed = (latest - pd.Timestamp(state["start_date"])).days
+    years_elapsed = days_elapsed / 365.25
+    horizon_met = (years_elapsed >= CONFIG["min_years"] and
+                   completed_cycles >= CONFIG["min_risk_off_cycles"])
+    hard_stop_reached = latest >= pd.Timestamp(CONFIG["hard_stop_date"])
+
+    if not horizon_met and not hard_stop_reached:
+        verdict = "NOT_READY"
+    elif hard_stop_reached and not horizon_met:
+        verdict = "INCONCLUSIVE"
+    else:
+        # Compute SP-C1 and SP-C2
+        c1_pass = state["after_tax_nav"] > bench_after_tax
+        # MAR requires full history; for now mark as pending
+        c2_pass = None  # Will be computed from nav_history at final evaluation
+        if c1_pass and c2_pass:
+            verdict = "NOT_REFUTED"
+        elif not c1_pass and not c2_pass:
+            verdict = "REFUTED"
+        else:
+            verdict = "PARTIAL"
+
     summary = {
         "experiment_id": CONFIG["experiment_id"],
         "asof": str(latest.date()),
@@ -343,12 +572,20 @@ def run(asof=None, force=False):
         "spy_price": spy_price,
         "ma200": ma,
         "nav": round(nav, 2),
+        "after_tax_nav": round(state["after_tax_nav"], 2),
+        "bench_nav": round(bench_nav, 2),
+        "bench_after_tax_nav": round(bench_after_tax, 2),
         "total_return_pct": round((nav / CONFIG["start_capital"] - 1) * 100, 3),
+        "bench_return_pct": round((bench_nav / CONFIG["start_capital"] - 1) * 100, 3),
         "spy_bench_return_pct": round(
             (state["spy_bench_nav"] / CONFIG["start_capital"] - 1) * 100, 3),
         "n_trades": len(trade_rows),
         "holdings": state["shares"],
         "cash": round(state["cash"], 2),
+        "risk_off_cycles_completed": completed_cycles,
+        "years_elapsed": round(years_elapsed, 2),
+        "horizon_met": horizon_met,
+        "verdict": verdict,
     }
     with open(SUMMARY_FILE, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)

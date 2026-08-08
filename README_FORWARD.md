@@ -1,6 +1,10 @@
 # SmartPassive Forward Paper Test — Operations Guide
 
-ניסוי forward של חצי שנה+ לשיטת SmartPassive 55/35/10 + MA200, שננעלה אחרי 13 מבחני מחקר (ראה `RESEARCH_REPORT.md`). **אין לשנות פרמטרים במהלך הניסוי.** כל שינוי = ניסוי חדש (`experiment_id` חדש).
+ניסוי forward לשיטת SmartPassive 55/35/10 + MA200, שננעלה אחרי 13 מבחני מחקר (ראה `RESEARCH_REPORT.md`). **אין לשנות פרמטרים במהלך הניסוי.** כל שינוי = ניסוי חדש (`experiment_id` חדש).
+
+**Preregistration:** `SMARTPASSIVE_hypothesis.md` (נכתב 2026-08-08, לפני החלפת משטר ראשונה).
+
+**Benchmark רשמי:** תיק סטטי 55/35/10 (SPY/IEF/GLD) ללא פילטר MA200, עם אותן עלויות, tolerance ותזמון. SPY benchmark נשמר כתיאור בלבד.
 
 ## כללי המסחר (נעולים, config hash בתוך state.json)
 | משטר | תנאי | הקצאה |
@@ -57,5 +61,35 @@ git push -u origin main
 - GitHub משבית scheduled workflows אחרי ~60 יום ללא פעילות ב-repo; commit אוטומטי יומי שומר על פעילות, אבל כדאי לבדוק מדי פעם את טאב Actions.
 - בדיקה חודשית: פתח `forward/report.html` — זה כל מה שצריך.
 
-## סיום הניסוי (אחרי 6+ חודשים)
-השווה: NAV מול SPY benchmark ו-metrics (CAGR, Sharpe, MaxDD מתוך nav_history.csv). החלטה: להמשיך כ-money-neutral paper, לעבור לכסף אמיתי רק אם הניסוי עקבי עם ה-backtest, או לסגור. כל החלטה מתועדת ב-commit.
+## מודל מס (preregistered)
+- 25% על רווח הון ממומש לפי FIFO, בדולר.
+- הפסדים ממומשים נצברים ומקוזזים מול רווחים עתידיים (loss carry-forward).
+- מתעלמים ממס דיבידנד, מט"ח ומס יסף 3%.
+- בסוף הניסוי: liquidation רעיוני + מס על רווח לא ממומש.
+- ההשוואה: `after_tax_terminal_wealth`, לא NAV לפני מס.
+
+## קריטריוני הפרכה (preregistered)
+| # | קריטריון | הגדרה |
+|---|---|---|
+| SP-C1 | after-tax terminal wealth | SmartPassive > Benchmark |
+| SP-C2 | MAR after-tax | SmartPassive > Benchmark |
+
+**MAR = after-tax CAGR ÷ |Max Drawdown|** (drawdown על after-tax liquidation NAV יומי).
+
+### פסק דין
+| תוצאה | תנאי |
+|---|---|
+| **מופרכת** | C1 ו-C2 נכשלים |
+| **לא הופרכה, חלקית** | רק אחד עובר |
+| **לא הופרכה** | שניהם עוברים |
+| **לא ניתן להכריע** | תנאי האופק/המחזורים לא התקיימו |
+
+## אופק הניסוי (preregistered)
+פסק דין רק לאחר **המאוחר** מבין:
+1. **3 שנים מלאות** מ-4.8.2026; ו-
+2. **שני מחזורי RISK_OFF מלאים**.
+
+**Hard stop:** אם עד 4.8.2034 לא הושלמו שני מחזורים → **לא ניתן להכריע**.
+
+## סיום הניסוי
+השווה: after-tax terminal wealth ו-MAR מול benchmark סטטי 55/35/10. החלטה: להמשיך כ-money-neutral paper, לעבור לכסף אמיתי רק אם הניסוי עקבי עם ה-backtest, או לסגור. כל החלטה מתועדת ב-commit.
