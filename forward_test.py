@@ -457,6 +457,12 @@ td,th{{border:1px solid #ccc;padding:4px 10px}}</style></head><body>
 # MAIN RUN
 # ============================================================
 def run(asof=None, force=False):
+    # Capture provenance BEFORE any file writes. forward/ artifacts are tracked,
+    # so stamping after save_state()/append_csv() would flip `dirty` on every run
+    # by construction (the bot dirtying its own output). Captured here, `dirty`
+    # reflects the tree at run start -- i.e. whether the code that is about to run
+    # differs from HEAD -- which is what the docstring promises.
+    prov = provenance()
     prices = load_prices(end_date=asof)
     latest = prices.index[-1]
 
@@ -470,6 +476,18 @@ def run(asof=None, force=False):
                 "asof": str(latest.date()), "status": "NO_ACTION_ALREADY_RUN",
                 "trades": 0, "nav": state["nav"]}],
                 ["run_ts", "asof", "status", "trades", "nav"])
+            # Keep summary.json provenance current even on a no-op rerun, but
+            # touch ONLY the provenance key: status/asof/numbers describe the
+            # last real run and must not be clobbered with NO_ACTION here.
+            if os.path.exists(SUMMARY_FILE):
+                try:
+                    with open(SUMMARY_FILE, "r", encoding="utf-8") as f:
+                        existing = json.load(f)
+                    existing["provenance"] = prov
+                    with open(SUMMARY_FILE, "w", encoding="utf-8") as f:
+                        json.dump(existing, f, indent=2)
+                except Exception:
+                    pass
             return state
 
     regime, spy_price, ma = compute_signal(prices, latest)
@@ -581,7 +599,6 @@ def run(asof=None, force=False):
         ["run_ts", "asof", "status", "trades", "nav"])
 
     save_state(state)
-    prov = provenance()
     write_report(state, nav_df, signal_row, prov)
 
     # Compute criteria status
