@@ -1,0 +1,18 @@
+{
+  "experiment_id": "smartpassive-forward-v1",
+  "asof": "2026-08-04",
+  "status": "INITIAL_ALLOCATION",
+  "regime": "RISK_ON",
+  "spy_price": 771.3300170898438,
+  "ma200": 698.4712667846679,
+  "nav": 9990.0,
+  "total_return_pct": -0.1,
+  "spy_bench_return_pct": 0.0,
+  "n_trades": 3,
+  "holdings": {
+    "SPY": 7.130540596294939,
+    "IEF": 37.533512064343164,
+    "GLD": 2.6726533841470252
+  },
+  "cash": -10.0
+}

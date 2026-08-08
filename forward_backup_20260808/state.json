@@ -1,0 +1,18 @@
+{
+  "experiment_id": "smartpassive-forward-v1",
+  "config_hash": "235aa15209ad",
+  "start_date": "2026-08-04",
+  "start_capital": 10000.0,
+  "cash": -10.0,
+  "shares": {
+    "SPY": 7.130540596294939,
+    "IEF": 37.533512064343164,
+    "GLD": 2.6726533841470252
+  },
+  "total_costs": 10.0,
+  "spy_start_price": 771.3300170898438,
+  "last_run_date": "2026-08-04",
+  "last_trade_month": "2026-08",
+  "nav": 9990.0,
+  "spy_bench_nav": 10000.0
+}
