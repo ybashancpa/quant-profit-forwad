@@ -25,6 +25,7 @@ reconcile.py — השוואת לייב מול בקטסט
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -159,11 +160,94 @@ def check_eod(log: pd.DataFrame) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════
-def report(path: Path):
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def build_summary(path: Path, log: pd.DataFrame) -> dict:
+    """
+    Distilled, redacted, deterministic summary of a reconcile run.
+
+    Safe to commit: contains NO account id, NO raw bars, NO full error text.
+    Carries a sha256 of the source JSONL so the distilled file can be tied
+    back to the exact log it was produced from (the log itself stays
+    git-ignored under live_logs/). Reuses the same check_* functions as the
+    human report so the two cannot drift apart.
+    """
+    out = {
+        "schema": "reconcile-summary/v1",
+        "source_log_sha256": _sha256_file(path),
+    }
+
+    conn = log[log.kind == "connect"]
+    if not conn.empty:
+        out["paper"] = bool(conn.iloc[0].get("paper"))  # paper/live flag only
+
+    errs = log[log.kind.isin(["error", "fatal"])]
+    disc = log[log.kind == "disconnect_event"]
+    out["n_errors"] = int(len(errs))
+    out["n_disconnects"] = int(len(disc))
+
+    symbols = sorted(log[log.kind == "bar"].symbol.dropna().unique()) \
+        if "symbol" in log.columns else []
+
+    verdict_ok = True
+    per_symbol = {}
+    for s in symbols:
+        bars = rebuild_bars(log, s)
+        sig = check_signals(log, s, bars)
+        sl = check_slippage(log, s)
+
+        mm = len(sig.get("mismatches", []))
+        ms = len(sig.get("potential_missed", []))
+        if mm or ms:
+            verdict_ok = False
+
+        entry = {
+            "bars": int(len(bars)),
+            "live_signals": int(sig.get("live_signals", 0)),
+            "signal_mismatches": mm,
+            "potential_missed": ms,
+            "entries": int(sl.get("entries", 0)),
+        }
+        if sl.get("entries"):
+            entry.update({
+                "slippage_mean_ticks": round(sl["mean_ticks"], 3),
+                "slippage_median_ticks": round(sl["median_ticks"], 3),
+                "slippage_max_ticks": round(sl["max_ticks"], 3),
+                "modeled_ticks": sl["modeled_ticks"],
+                "slippage_ratio": round(sl["ratio"], 3),
+                "worse_than_model": bool(sl["worse_than_model"]),
+            })
+        per_symbol[s] = entry
+
+    eod = check_eod(log)
+    if eod["unclosed"] > 0 or eod["late_closes"]:
+        verdict_ok = False
+
+    out["symbols"] = per_symbol
+    out["eod"] = {
+        "entries": int(eod["entries"]),
+        "exits": int(eod["exits"]),
+        "unclosed": int(eod["unclosed"]),
+        "eod_closes": int(eod["eod_closes"]),
+        "n_late_closes": len(eod["late_closes"]),
+    }
+    out["verdict_ok"] = bool(verdict_ok and len(errs) == 0)
+    return out
+
+
+# ══════════════════════════════════════════════════════════════
+def report(path: Path) -> dict:
     log = load_log(path)
     if log.empty:
         print(f"✗ הלוג ריק: {path}")
-        return
+        return {}
+    summary = build_summary(path, log)
 
     print("╔" + "═" * 62 + "╗")
     print("║" + f"  Reconcile — {path.name}".ljust(62) + "║")
@@ -252,12 +336,15 @@ def report(path: Path):
         print("  ✗ נמצאו סטיות. לתקן לפני שמסיקים משהו מ-P&L.")
     print("═" * 64)
     print("\n  ⚠️ זו בדיקה הנדסית. P&L נבדק חודשית, לא יומית.")
+    return summary
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--log", type=str)
     p.add_argument("--latest", action="store_true")
+    p.add_argument("--out", type=str, default=None,
+                   help="כתוב סיכום JSON מזוקק ומוסר (ללא account id) לנתיב זה")
     args = p.parse_args()
 
     if args.latest or not args.log:
@@ -272,7 +359,13 @@ def main():
     if not path.exists():
         print(f"✗ לא נמצא: {path}")
         return
-    report(path)
+    summary = report(path)
+    if args.out and summary:
+        outp = Path(args.out)
+        outp.parent.mkdir(parents=True, exist_ok=True)
+        with open(outp, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2, sort_keys=True)
+        print(f"\n  ▸ סיכום מזוקק נכתב אל: {outp}")
 
 
 if __name__ == "__main__":
