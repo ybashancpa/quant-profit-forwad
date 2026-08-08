@@ -618,6 +618,22 @@ def run(asof=None, force=False):
         c1_pass = state["after_tax_nav"] > bench_after_tax
         # MAR requires full history; for now mark as pending
         c2_pass = None  # Will be computed from nav_history at final evaluation
+        # ---------------------------------------------------------------------
+        # KNOWN GAP (C2 verdict) -- documented, deliberately NOT fixed here.
+        # SP-C2 (after-tax MAR) is unimplemented, so c2_pass is None. But this
+        # branch only runs once horizon_met (>= min_years AND min_risk_off
+        # cycles) or the hard stop is hit -- i.e. from ~2029 onward. When it
+        # does, `not c2_pass` evaluates `not None == True`, so a FAILING C1
+        # (c1_pass=False) with c2 still unimplemented takes the second arm and
+        # stamps verdict="REFUTED" on the strength of a criterion that was never
+        # computed. Refuting the hypothesis on an uncomputed criterion is wrong.
+        # Required guard BEFORE the first real verdict: treat c2_pass is None as
+        # INCONCLUSIVE, not REFUTED (e.g. `if c2_pass is None: verdict =
+        # "INCONCLUSIVE"`). This does NOT change the locked SP-C2 criterion --
+        # it only stops an un-run criterion from producing a false REFUTED.
+        # See preregistration SMARTPASSIVE_hypothesis.md sec. 5 (do not edit
+        # that file: its sha256 is the provenance seal).
+        # ---------------------------------------------------------------------
         if c1_pass and c2_pass:
             verdict = "NOT_REFUTED"
         elif not c1_pass and not c2_pass:
