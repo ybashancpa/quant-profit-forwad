@@ -1,0 +1,25 @@
+name,window,return_pct,max_dd_in_window_pct,recovery_days_after_window_end,crisis
+PUT | GFC 2008 (year),2008-01-01 -> 2008-12-31,-26.25,-35.52,478,GFC 2008 (year)
+BXM | GFC 2008 (year),2008-01-01 -> 2008-12-31,-28.05,-36.64,1098,GFC 2008 (year)
+SPX | GFC 2008 (year),2008-01-01 -> 2008-12-31,-37.58,-48.01,1548,GFC 2008 (year)
+SPY_TR | GFC 2008 (year),2008-01-01 -> 2008-12-31,-36.24,-47.12,1324,GFC 2008 (year)
+PUT | GFC peak-trough,2007-10-09 -> 2009-03-09,-34.83,-37.09,378,GFC peak-trough
+BXM | GFC peak-trough,2007-10-09 -> 2009-03-09,-39.06,-40.14,1018,GFC peak-trough
+SPX | GFC peak-trough,2007-10-09 -> 2009-03-09,-56.78,-56.78,1480,GFC peak-trough
+SPY_TR | GFC peak-trough,2007-10-09 -> 2009-03-09,-55.19,-55.19,1256,GFC peak-trough
+PUT | Volmageddon Feb-2018,2018-01-26 -> 2018-02-12,-4.91,-7.13,98,Volmageddon Feb-2018
+BXM | Volmageddon Feb-2018,2018-01-26 -> 2018-02-12,-4.99,-7.72,32,Volmageddon Feb-2018
+SPX | Volmageddon Feb-2018,2018-01-26 -> 2018-02-12,-7.55,-10.16,193,Volmageddon Feb-2018
+SPY_TR | Volmageddon Feb-2018,2018-01-26 -> 2018-02-12,-7.41,-10.1,175,Volmageddon Feb-2018
+PUT | Corona Feb-Mar 2020,2020-02-19 -> 2020-03-23,-28.92,-30.04,290,Corona Feb-Mar 2020
+BXM | Corona Feb-Mar 2020,2020-02-19 -> 2020-03-23,-30.23,-30.26,364,Corona Feb-Mar 2020
+SPX | Corona Feb-Mar 2020,2020-02-19 -> 2020-03-23,-33.92,-33.92,148,Corona Feb-Mar 2020
+SPY_TR | Corona Feb-Mar 2020,2020-02-19 -> 2020-03-23,-33.72,-33.72,140,Corona Feb-Mar 2020
+PUT | 2022 (year),2022-01-01 -> 2022-12-31,-7.85,-16.01,129,2022 (year)
+BXM | 2022 (year),2022-01-01 -> 2022-12-31,-11.61,-18.21,385,2022 (year)
+SPX | 2022 (year),2022-01-01 -> 2022-12-31,-19.95,-25.43,385,2022 (year)
+SPY_TR | 2022 (year),2022-01-01 -> 2022-12-31,-18.65,-24.5,348,2022 (year)
+PUT | Yen-carry Aug-2024,2024-07-16 -> 2024-08-05,-4.42,-4.96,8,Yen-carry Aug-2024
+BXM | Yen-carry Aug-2024,2024-07-16 -> 2024-08-05,-5.07,-5.07,10,Yen-carry Aug-2024
+SPX | Yen-carry Aug-2024,2024-07-16 -> 2024-08-05,-8.49,-8.49,45,Yen-carry Aug-2024
+SPY_TR | Yen-carry Aug-2024,2024-07-16 -> 2024-08-05,-8.41,-8.41,45,Yen-carry Aug-2024

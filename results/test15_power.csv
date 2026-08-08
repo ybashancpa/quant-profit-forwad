@@ -1,0 +1,13 @@
+true_per_trade_sr,alpha,trades_needed
+0.05,plain,2477
+0.05,bonferroni,6298
+0.1,plain,622
+0.1,bonferroni,1581
+0.15,plain,278
+0.15,bonferroni,707
+0.2,plain,158
+0.2,bonferroni,401
+0.3,plain,72
+0.3,bonferroni,183
+0.5,plain,28
+0.5,bonferroni,71

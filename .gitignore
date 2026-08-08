@@ -4,6 +4,9 @@ data/etf_prices.csv
 .venv/
 forward/email_preview.html
 
+# Failed-fetch artifacts from the CBOE CDN attempt (error pages, not data).
+data/cboe/
+
 # Operational live-trading logs: large, regenerable, and may carry account
 # identifiers. The distilled reconcile summaries are tracked separately.
 live_logs/

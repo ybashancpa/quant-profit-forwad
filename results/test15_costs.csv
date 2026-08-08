@@ -1,0 +1,16 @@
+symbol,name,ibkr_comm_rt,exchange_reg_rt,spread_cost_usd,total_round_trip_usd,total_in_ticks,tick_value_usd,liquidity_rth
+MES,Micro S&P 500,0.5,0.52,1.25,2.27,1.8,1.25,very high
+MNQ,Micro Nasdaq-100,0.5,0.56,0.5,1.56,3.1,0.5,very high
+MYM,Micro Dow,0.5,0.52,0.5,1.52,3.0,0.5,high
+M2K,Micro Russell 2000,0.5,0.52,0.5,1.52,3.0,0.5,high
+MCL,Micro WTI Crude,0.5,0.54,1.0,2.04,2.0,1.0,high
+MGC,Micro Gold,0.5,0.54,1.0,2.04,2.0,1.0,high
+SIL,Micro Silver,0.5,0.6,5.0,6.1,1.2,5.0,medium
+MBT,Micro Bitcoin,1.7,0.8,1.0,3.5,7.0,0.5,medium
+MET,Micro Ether,0.4,0.6,0.1,1.1,22.1,0.05,medium (tick value: verify)
+MSL,Micro Solana,4.5,1.6,,6.1,,,"LOW (new, thin)"
+MXR,Micro XRP (MXP),4.5,1.6,,6.1,,,"LOW (new, thin)"
+M6E,Micro EUR/USD,0.3,0.38,1.25,1.93,1.5,1.25,medium-high
+M6B,Micro GBP/USD,0.3,0.38,0.62,1.31,2.1,0.625,medium
+M6A,Micro AUD/USD,0.3,0.38,1.0,1.68,1.7,1.0,medium
+MJY,Micro JPY/USD,0.3,0.38,0.62,1.31,2.1,0.625,medium-low

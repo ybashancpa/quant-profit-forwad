@@ -1,0 +1,20 @@
+structure,n_legs,premium_per_contract_usd,round_trip_cost_usd,cost_pct_of_premium
+Cash-secured put / covered call (1 leg),1,20.0,4.11,20.54
+Credit vertical spread (2 legs),2,20.0,6.81,34.07
+Iron condor (4 legs),4,20.0,13.63,68.14
+Cash-secured put / covered call (1 leg),1,50.0,4.11,8.21
+Credit vertical spread (2 legs),2,50.0,6.81,13.63
+Iron condor (4 legs),4,50.0,13.63,27.26
+Cash-secured put / covered call (1 leg),1,100.0,4.11,4.11
+Credit vertical spread (2 legs),2,100.0,6.81,6.81
+Iron condor (4 legs),4,100.0,13.63,13.63
+Cash-secured put / covered call (1 leg),1,200.0,4.11,2.05
+Credit vertical spread (2 legs),2,200.0,6.81,3.41
+Iron condor (4 legs),4,200.0,13.63,6.81
+Cash-secured put / covered call (1 leg),1,500.0,4.11,0.82
+Credit vertical spread (2 legs),2,500.0,6.81,1.36
+Iron condor (4 legs),4,500.0,13.63,2.73
+Credit spread half-spread 1t,2,100.0,6.81,6.81
+Credit spread half-spread 2t,2,100.0,10.81,10.81
+Credit spread half-spread 5t,2,100.0,22.81,22.81
+Credit spread half-spread 10t,2,100.0,42.81,42.81

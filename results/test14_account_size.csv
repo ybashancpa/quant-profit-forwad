@@ -1,0 +1,5 @@
+account_usd,risk_budget_2pct_usd,csp_contracts_feasible,n_1wide_spreads_at_2pct,n_5wide_spreads_at_2pct,roundtrip_cost_per_spread_usd,breakeven_premium_1wide_usd,breakeven_premium_1wide_pct_of_width,cost_pct_of_20pct_credit_on_1wide,cost_pct_of_30pct_credit_on_1wide,cost_pct_of_50pct_credit_on_1wide
+5000,100.0,0,1,0,6.81,6.81,6.8,34.1,22.7,13.6
+10000,200.0,0,2,0,6.81,6.81,6.8,34.1,22.7,13.6
+25000,500.0,0,5,1,6.81,6.81,6.8,34.1,22.7,13.6
+50000,1000.0,0,10,2,6.81,6.81,6.8,34.1,22.7,13.6
