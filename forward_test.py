@@ -72,6 +72,11 @@ def provenance():
     Git provenance stamp for every report: commit SHA, dirty flag, and the
     sha256 of the locked hypothesis document. Added after the v1/v2 mix-up so
     each artifact can be traced to the exact code+config that produced it.
+
+    `dirty` reflects only modifications to TRACKED files (--untracked-files=no).
+    Untracked build/data artifacts must not flip the flag, otherwise it becomes
+    permanent noise that everyone ignores (the usual way warnings die). A true
+    `dirty` therefore means the code that ran differs from the committed code.
     """
     prov = {"commit": "", "dirty": None, "hypothesis_sha256": ""}
     try:
@@ -79,7 +84,7 @@ def provenance():
             ["git", "rev-parse", "HEAD"],
             capture_output=True, text=True, timeout=10).stdout.strip()
         porcelain = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "--untracked-files=no"],
             capture_output=True, text=True, timeout=10).stdout.strip()
         prov["dirty"] = bool(porcelain)
     except Exception:
