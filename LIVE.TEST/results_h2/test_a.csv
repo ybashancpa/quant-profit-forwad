@@ -1,0 +1,4 @@
+scenario,slippage_ticks_rt,slippage_cost,net_per_trade,annual_net,pct_account
+slip_1,1,0.5,0.2373,59.32,1.19
+slip_2,2,1.0,-0.2627,-65.68,-1.31
+slip_4,4,2.0,-1.2627,-315.68,-6.31

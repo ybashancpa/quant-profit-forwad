@@ -1,0 +1,105 @@
+{
+  "executed_at_utc": "2026-08-08T07:36:11.414853",
+  "hypothesis": "H2",
+  "symbol": "M2K",
+  "locked_file_hashes": {
+    "H2_hypothesis.md": "f4484468ce7d9092d3383e956cf2420fb4e2ee758b5d2e9a54a02166cc816f3b",
+    "H2_appendix_A.md": "75a7a7911ccc88bb170f7cac509742b50bc1998297a883579f6a8befd75ada41",
+    "H2_protocol_overlap_ruling.md": "aa4eba124a2a93ae1cba7dcd09c7779ad75a5d2cef96eba54fec97be53fc3339",
+    "h2_config.py": "8f4673fbd1c88e47ec3042241be61f665c2cfab07f9e48bd3a900f3c340252ee"
+  },
+  "snapshot_hash": "59b9203feed76523c330ab2239e762ba481c82c95df7bdba8fc19a9889d5e1b2",
+  "n_valid_days": 40,
+  "removals": {
+    "half_day_sessions": 0,
+    "day_after_half_day": 0,
+    "missing_1530": 0,
+    "missing_1555": 0,
+    "missing_prev_close": 1,
+    "zero_r_ROD": 0
+  },
+  "test_a": {
+    "n_days": 40,
+    "sigma_dollars": 35.8301,
+    "sigma_dollars_alt": 35.8768,
+    "sigma_r_LH": 0.002401,
+    "mean_px_1530": 2988.2,
+    "expected_gross_per_trade": 2.2573,
+    "scenarios": {
+      "slip_1": {
+        "slippage_ticks_rt": 1,
+        "slippage_cost": 0.5,
+        "net_per_trade": 0.2373,
+        "annual_net": 59.32,
+        "pct_account": 1.19
+      },
+      "slip_2": {
+        "slippage_ticks_rt": 2,
+        "slippage_cost": 1.0,
+        "net_per_trade": -0.2627,
+        "annual_net": -65.68,
+        "pct_account": -1.31
+      },
+      "slip_4": {
+        "slippage_ticks_rt": 4,
+        "slippage_cost": 2.0,
+        "net_per_trade": -1.2627,
+        "annual_net": -315.68,
+        "pct_account": -6.31
+      }
+    },
+    "break_even_ticks": 0.07,
+    "rf_per_trade": 0.7
+  },
+  "test_b": {
+    "n": 40,
+    "corr": -0.00569,
+    "p_value": 0.97202,
+    "ci95_lo": -0.316643,
+    "ci95_hi": 0.306368,
+    "negative_significant": false
+  },
+  "descriptive_backtest": {
+    "n_trades": 40,
+    "win_rate": 50.0,
+    "net_total": 84.2,
+    "mean_net_per_trade": 2.1051,
+    "stop_hits_1pct": 0,
+    "note": "תיאורי בלבד — n קטן, אינו קריטריון"
+  },
+  "verdict": {
+    "criteria": {
+      "FC1": {
+        "status": "FAIL",
+        "value": -65.68,
+        "threshold": 175.00000000000003,
+        "detail": "נטו שנתי $-66 מול סף $175"
+      },
+      "FC2": {
+        "status": "PASS",
+        "value": -0.00569,
+        "p_value": 0.97202,
+        "detail": "corr=-0.0057, p=0.9720 → לא שלילי מובהק"
+      },
+      "FC3": {
+        "status": "PENDING",
+        "value": null,
+        "break_even_ticks": 0.07,
+        "detail": "נדרש Paper. break-even = 0.1 טיקים הלוך-חזור (מעל 2 טיקים → FC1 בסכנה)"
+      },
+      "FC4": {
+        "status": "PENDING",
+        "value": null,
+        "estimate": 800.0,
+        "threshold": 1500.0,
+        "detail": "אומדן $800 מול סף $1500 — לאמת מול TWS"
+      }
+    },
+    "verdict": "מופרכת"
+  },
+  "protocol_notes": [
+    "שני הנספחים (H2_appendix_A.md, H2_protocol_overlap_ruling.md) נשמרו לפני טעינת הנתונים — hash-ים כלולים לעיל.",
+    "FC3 ו-FC4 הם PENDING בהגדרה — פסק הדין חלקי.",
+    "הבדיקה אינה יכולה לאשר, רק לשלול (n קטן, הספק אפסי)."
+  ]
+}

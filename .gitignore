@@ -3,3 +3,7 @@ __pycache__/
 data/etf_prices.csv
 .venv/
 forward/email_preview.html
+
+# Operational live-trading logs: large, regenerable, and may carry account
+# identifiers. The distilled reconcile summaries are tracked separately.
+LIVE.TEST/live_logs/

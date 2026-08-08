@@ -1,0 +1,82 @@
+{
+  "executed_at_utc": "2026-08-08T06:03:39.802432",
+  "symbols": [
+    "MYM",
+    "M2K"
+  ],
+  "capital": 5000.0,
+  "days_requested": 59,
+  "locked_criteria": {
+    "LULL_START": "11:00",
+    "LULL_END": "14:00",
+    "MIN_R_GAP": 0.15,
+    "EXPECTED_R_GAP": 0.3,
+    "MIN_TRADES_PER_DAY": 0.5
+  },
+  "locked_file_hashes": {
+    "H1_hypothesis.md": "429e541cfe4cd64ea3cfc7f5529d646230174e773972629eaaf060414ac81b4c",
+    "config.py": "617e691691d39ca423048f040406456d32fe9c94bb92aa45cbec536e3f29d12b",
+    "strategy.py": "d9b1805cd82c7fc61b73fea6e1451b5b63e88da6bfeddad911df8a5dd53ebe00"
+  },
+  "note": "נתוני Yahoo continuous futures (YM=F/RTY=F), הורדה חד-פעמית שנשמרה ל-snapshot. זה אינו ה-snapshot המקורי של 41 הימים.",
+  "per_symbol": {
+    "MYM": {
+      "days": 41,
+      "n_base": 8,
+      "n_lull": 4,
+      "n_liquidity": 4,
+      "gap": {
+        "gap_r": 1.4836,
+        "se_r": 0.8062,
+        "ci95_lo": -0.0966,
+        "ci95_hi": 3.0639,
+        "n_liquidity": 4,
+        "n_lull": 4
+      },
+      "vwap_exits_total": 2,
+      "vwap_exits_in_lull_pct": 100.0,
+      "n_filtered": 6,
+      "filtered_mean_r": 0.0188,
+      "filtered_trades_per_day": 0.146
+    },
+    "M2K": {
+      "days": 41,
+      "n_base": 14,
+      "n_lull": 8,
+      "n_liquidity": 6,
+      "gap": {
+        "gap_r": 0.4729,
+        "se_r": 0.4555,
+        "ci95_lo": -0.4199,
+        "ci95_hi": 1.3658,
+        "n_liquidity": 6,
+        "n_lull": 8
+      },
+      "vwap_exits_total": 5,
+      "vwap_exits_in_lull_pct": 60.0,
+      "n_filtered": 7,
+      "filtered_mean_r": -0.2845,
+      "filtered_trades_per_day": 0.171
+    }
+  },
+  "verdict": {
+    "criteria": {
+      "1_gap_ge_0.15R_all_instruments": true,
+      "2_sign_stable_across_instruments": true,
+      "3_filtered_expectancy_not_negative": false,
+      "4_filtered_trades_per_day_ge_0.5": false,
+      "gaps": {
+        "M2K": 0.4729,
+        "MYM": 1.4836
+      },
+      "filtered_trades_per_day": {
+        "MYM": 0.146,
+        "M2K": 0.171
+      },
+      "pooled_filtered_mean_r": -0.1328
+    },
+    "refuted": true,
+    "reason": "3_filtered_expectancy_not_negative,4_filtered_trades_per_day_ge_0.5"
+  },
+  "sanity_issues": []
+}
