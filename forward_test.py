@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 
@@ -60,6 +61,37 @@ SIGNALS_FILE = os.path.join(FORWARD_DIR, "signals.csv")
 RUNS_FILE = os.path.join(FORWARD_DIR, "runs.csv")
 REPORT_FILE = os.path.join(FORWARD_DIR, "report.html")
 SUMMARY_FILE = os.path.join(FORWARD_DIR, "summary.json")
+HYPOTHESIS_FILE = os.environ.get("HYPOTHESIS_FILE", "SMARTPASSIVE_hypothesis.md")
+
+
+# ============================================================
+# PROVENANCE STAMPING
+# ============================================================
+def provenance():
+    """
+    Git provenance stamp for every report: commit SHA, dirty flag, and the
+    sha256 of the locked hypothesis document. Added after the v1/v2 mix-up so
+    each artifact can be traced to the exact code+config that produced it.
+    """
+    prov = {"commit": "", "dirty": None, "hypothesis_sha256": ""}
+    try:
+        prov["commit"] = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=10).stdout.strip()
+        porcelain = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, timeout=10).stdout.strip()
+        prov["dirty"] = bool(porcelain)
+    except Exception:
+        prov["commit"] = ""
+        prov["dirty"] = None
+    try:
+        if os.path.exists(HYPOTHESIS_FILE):
+            with open(HYPOTHESIS_FILE, "rb") as f:
+                prov["hypothesis_sha256"] = hashlib.sha256(f.read()).hexdigest()
+    except Exception:
+        prov["hypothesis_sha256"] = ""
+    return prov
 
 
 # ============================================================
@@ -356,7 +388,12 @@ def read_nav_history():
 # ============================================================
 # REPORT
 # ============================================================
-def write_report(state, nav_df, last_signal):
+def write_report(state, nav_df, last_signal, prov=None):
+    if prov is None:
+        prov = provenance()
+    prov_commit = prov.get("commit") or "n/a"
+    prov_dirty = prov.get("dirty")
+    prov_hash = (prov.get("hypothesis_sha256") or "")[:16] or "n/a"
     start_nav = CONFIG["start_capital"]
     nav = state["nav"]
     total_ret = (nav / start_nav - 1) * 100
@@ -391,6 +428,7 @@ def write_report(state, nav_df, last_signal):
 td,th{{border:1px solid #ccc;padding:4px 10px}}</style></head><body>
 <h1>SmartPassive Forward Paper Test</h1>
 <p>Experiment: <b>{CONFIG['experiment_id']}</b> (config hash {CONFIG['config_hash']})</p>
+<p style="color:#666;font-size:12px">Provenance: commit <code>{prov_commit}</code> · dirty={prov_dirty} · hypothesis sha256 <code>{prov_hash}</code></p>
 <table>
 <tr><th>Start date</th><td>{state['start_date']}</td></tr>
 <tr><th>Last run</th><td>{state['last_run_date']}</td></tr>
@@ -538,7 +576,8 @@ def run(asof=None, force=False):
         ["run_ts", "asof", "status", "trades", "nav"])
 
     save_state(state)
-    write_report(state, nav_df, signal_row)
+    prov = provenance()
+    write_report(state, nav_df, signal_row, prov)
 
     # Compute criteria status
     completed_cycles = sum(1 for c in state.get("risk_off_cycles", []) if c.get("completed"))
@@ -568,6 +607,7 @@ def run(asof=None, force=False):
         "experiment_id": CONFIG["experiment_id"],
         "asof": str(latest.date()),
         "status": status,
+        "provenance": prov,
         "regime": regime,
         "spy_price": spy_price,
         "ma200": ma,
