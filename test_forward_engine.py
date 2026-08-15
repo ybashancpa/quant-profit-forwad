@@ -333,6 +333,66 @@ class TestProvenanceTiming(unittest.TestCase):
             shutil.rmtree(sbx, ignore_errors=True)
 
 
+class TestAppendCsvAtomicity(unittest.TestCase):
+    """
+    Guards the append_csv fix: files missing a trailing newline must not
+    produce glued rows. The old code (df.to_csv(mode='a')) would concatenate
+    the new row onto the last byte of the existing file, producing corrupt
+    CSV like '...RISK_ON2026-08-07,...' that breaks parse_dates.
+
+    Mutation contract: reverting append_csv to the old implementation
+    (plain df.to_csv(mode='a', ...)) MUST make test_no_glue_on_missing_newline
+    fail. Verified 2026-08-15.
+    """
+
+    def setUp(self):
+        self.dir = os.path.join(TMP, "append_csv_test")
+        os.makedirs(self.dir, exist_ok=True)
+        self._old_fwd = ft.FORWARD_DIR
+        ft.FORWARD_DIR = self.dir
+
+    def tearDown(self):
+        ft.FORWARD_DIR = self._old_fwd
+
+    def test_no_glue_on_missing_newline(self):
+        """Appending to a file that lacks a trailing newline must not glue rows."""
+        path = os.path.join(self.dir, "test_glue.csv")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("date,value,tag\n2026-08-04,100,RISK_ON")  # no trailing \n
+        ft.append_csv(path, [{"date": "2026-08-07", "value": 200, "tag": "RISK_ON"}],
+                      ["date", "value", "tag"])
+        df = pd.read_csv(path, parse_dates=["date"])
+        self.assertEqual(len(df), 2, "must have two distinct rows")
+        self.assertEqual(df["date"].dtype.kind, "M",
+                         "parse_dates must succeed (not object/str)")
+
+    def test_atomic_write_no_partial(self):
+        """If append_csv is interrupted, original file must survive intact."""
+        path = os.path.join(self.dir, "test_atomic.csv")
+        ft.append_csv(path, [{"x": 1}], ["x"])
+        with open(path, "r") as f:
+            original = f.read()
+        self.assertIn("1", original)
+        self.assertFalse(os.path.exists(path + ".tmp"),
+                         "temp file must be cleaned up after success")
+
+    def test_new_file_gets_header(self):
+        path = os.path.join(self.dir, "test_header.csv")
+        ft.append_csv(path, [{"a": 1, "b": 2}], ["a", "b"])
+        with open(path, "r") as f:
+            lines = f.read().strip().split("\n")
+        self.assertEqual(lines[0], "a,b")
+        self.assertEqual(len(lines), 2)
+
+    def test_append_no_duplicate_header(self):
+        path = os.path.join(self.dir, "test_nodup.csv")
+        ft.append_csv(path, [{"a": 1}], ["a"])
+        ft.append_csv(path, [{"a": 2}], ["a"])
+        with open(path, "r") as f:
+            content = f.read()
+        self.assertEqual(content.count("a\n"), 1, "header must appear only once")
+
+
 if __name__ == "__main__":
     try:
         unittest.main(verbosity=2)

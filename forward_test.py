@@ -138,7 +138,8 @@ def load_prices(end_date=None):
 # ============================================================
 def compute_signal(prices, asof):
     """MA200 regime signal at `asof` (point-in-time)."""
-    spy = prices["SPY"].loc[:asof]
+    _s = prices["SPY"]
+    spy = _s if asof is None else _s.loc[:pd.Timestamp(asof)]
     if len(spy) < CONFIG["ma_lookback"]:
         raise RuntimeError("Not enough SPY history for MA200")
     ma = spy.rolling(CONFIG["ma_lookback"]).mean().iloc[-1]
@@ -393,7 +394,22 @@ def append_csv(path, rows, columns):
     os.makedirs(FORWARD_DIR, exist_ok=True)
     df = pd.DataFrame(rows, columns=columns)
     write_header = not os.path.exists(path)
-    df.to_csv(path, mode="a", header=write_header, index=False)
+    if not write_header:
+        with open(path, "rb") as f:
+            f.seek(0, 2)
+            if f.tell() > 0:
+                f.seek(-1, 2)
+                if f.read(1) != b"\n":
+                    with open(path, "a", encoding="utf-8") as fa:
+                        fa.write("\n")
+    tmp = path + ".tmp"
+    if write_header:
+        df.to_csv(tmp, mode="w", header=True, index=False)
+    else:
+        import shutil
+        shutil.copy2(path, tmp)
+        df.to_csv(tmp, mode="a", header=False, index=False)
+    os.replace(tmp, path)
 
 
 def read_nav_history():
@@ -591,7 +607,7 @@ def run(asof=None, force=False):
     bench_after_tax = state.get("benchmark", {}).get("after_tax_nav", CONFIG["start_capital"])
 
     nav_df = read_nav_history()
-    if len(nav_df) == 0 or nav_df["date"].max() < latest:
+    if len(nav_df) == 0 or pd.to_datetime(nav_df["date"]).max() < pd.Timestamp(latest):
         append_csv(NAV_FILE, [{
             "date": str(latest.date()), "nav": round(nav, 2),
             "after_tax_nav": round(state["after_tax_nav"], 2),
