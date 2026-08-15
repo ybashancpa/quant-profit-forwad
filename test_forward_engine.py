@@ -366,15 +366,23 @@ class TestAppendCsvAtomicity(unittest.TestCase):
         self.assertEqual(df["date"].dtype.kind, "M",
                          "parse_dates must succeed (not object/str)")
 
-    def test_atomic_write_no_partial(self):
-        """If append_csv is interrupted, original file must survive intact."""
+    def test_atomic_write_survives_crash(self):
+        """If os.replace fails mid-append, original file must be byte-identical."""
         path = os.path.join(self.dir, "test_atomic.csv")
-        ft.append_csv(path, [{"x": 1}], ["x"])
-        with open(path, "r") as f:
-            original = f.read()
-        self.assertIn("1", original)
-        self.assertFalse(os.path.exists(path + ".tmp"),
-                         "temp file must be cleaned up after success")
+        with open(path, "wb") as f:
+            f.write(b"x\n1")  # no trailing newline — the repair case
+        original = open(path, "rb").read()
+        real_replace = os.replace
+        def bomb(*a, **kw):
+            raise OSError("simulated crash")
+        os.replace = bomb
+        try:
+            with self.assertRaises(OSError):
+                ft.append_csv(path, [{"x": 2}], ["x"])
+        finally:
+            os.replace = real_replace
+        self.assertEqual(open(path, "rb").read(), original,
+                         "original file must be untouched after failed append")
 
     def test_new_file_gets_header(self):
         path = os.path.join(self.dir, "test_header.csv")

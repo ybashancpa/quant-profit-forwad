@@ -394,20 +394,19 @@ def append_csv(path, rows, columns):
     os.makedirs(FORWARD_DIR, exist_ok=True)
     df = pd.DataFrame(rows, columns=columns)
     write_header = not os.path.exists(path)
-    if not write_header:
-        with open(path, "rb") as f:
-            f.seek(0, 2)
-            if f.tell() > 0:
-                f.seek(-1, 2)
-                if f.read(1) != b"\n":
-                    with open(path, "a", encoding="utf-8") as fa:
-                        fa.write("\n")
     tmp = path + ".tmp"
     if write_header:
         df.to_csv(tmp, mode="w", header=True, index=False)
     else:
         import shutil
         shutil.copy2(path, tmp)
+        with open(tmp, "rb") as f:
+            f.seek(0, 2)
+            if f.tell() > 0:
+                f.seek(-1, 2)
+                if f.read(1) != b"\n":
+                    with open(tmp, "a", encoding="utf-8") as fa:
+                        fa.write("\n")
         df.to_csv(tmp, mode="a", header=False, index=False)
     os.replace(tmp, path)
 
