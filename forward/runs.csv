@@ -8,3 +8,6 @@ run_ts,asof,status,trades,nav
 2026-08-08T11:52:52,2026-08-07,HOLD(not month-end),0,10065.73
 2026-08-08T10:37:35,2026-08-07,NO_ACTION_ALREADY_RUN,0,10065.73133867773
 2026-08-08T11:18:57,2026-08-07,NO_ACTION_ALREADY_RUN,0,10065.73133867773
+2026-08-15T12:02:33,latest,ERROR: '<' not supported between instances of 'str' and 'Timestamp',0,
+2026-08-15T12:06:32,latest,ERROR: '<' not supported between instances of 'str' and 'Timestamp',0,
+2026-08-15T12:08:38,latest,"ERROR: Unknown datetime string format, unable to parse: RISK_ON2026-08-07",0,
