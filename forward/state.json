@@ -11,10 +11,10 @@
   },
   "total_costs": 10.0,
   "spy_start_price": 771.3300170898438,
-  "last_run_date": "2026-08-18",
+  "last_run_date": "2026-08-19",
   "last_trade_month": "2026-08",
-  "nav": 10015.508728889647,
-  "spy_bench_nav": 9949.697213944151,
+  "nav": 10084.74365376539,
+  "spy_bench_nav": 9970.570061050981,
   "tax_lots": {
     "SPY": [
       {
@@ -78,8 +78,8 @@
     "loss_carryforward": 0.0,
     "total_realized_tax": 0.0,
     "last_trade_month": "2026-08",
-    "nav": 10015.508728889647,
-    "after_tax_nav": 10009.131516484173
+    "nav": 10084.74365376539,
+    "after_tax_nav": 10061.057711454132
   },
-  "after_tax_nav": 10009.131516484173
+  "after_tax_nav": 10061.057711454132
 }
