@@ -3,7 +3,7 @@
   "asof": "2026-09-01",
   "status": "MONTH_END_NO_TRADE(drift=0.67%)",
   "provenance": {
-    "commit": "275af922b6ac724bed0dce479b69fd0ad5db1b6d",
+    "commit": "3ff93791926b902d8e7eda68e418af03c7ab21cf",
     "dirty": false,
     "hypothesis_sha256": "8fab626265fa090f72ec24fc8bef3d77ef5ef8f1a22559fa804dd54bf7a9742e"
   },
