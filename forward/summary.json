@@ -1,22 +1,22 @@
 {
   "experiment_id": "smartpassive-forward-v2",
-  "asof": "2026-09-29",
-  "status": "MONTH_END_NO_TRADE(drift=0.81%)",
+  "asof": "2026-10-01",
+  "status": "MONTH_END_NO_TRADE(drift=0.84%)",
   "provenance": {
-    "commit": "68e125d718e31c6ed0c3502f7f6b5738cd665c01",
+    "commit": "53e5e40243c58cd7bd42af7d083a46fadd8eeaef",
     "dirty": false,
     "hypothesis_sha256": "8fab626265fa090f72ec24fc8bef3d77ef5ef8f1a22559fa804dd54bf7a9742e"
   },
   "regime": "RISK_ON",
-  "spy_price": 764.2000122070312,
-  "ma200": 715.7068646240234,
-  "nav": 9819.86,
-  "after_tax_nav": 9819.86,
-  "bench_nav": 9819.86,
-  "bench_after_tax_nav": 9819.86,
-  "total_return_pct": -1.801,
-  "bench_return_pct": -1.801,
-  "spy_bench_return_pct": -0.924,
+  "spy_price": 763.989990234375,
+  "ma200": 716.5584783935547,
+  "nav": 9812.39,
+  "after_tax_nav": 9812.39,
+  "bench_nav": 9812.39,
+  "bench_after_tax_nav": 9812.39,
+  "total_return_pct": -1.876,
+  "bench_return_pct": -1.876,
+  "spy_bench_return_pct": -0.952,
   "n_trades": 0,
   "holdings": {
     "SPY": 7.130540596294939,
@@ -25,7 +25,7 @@
   },
   "cash": -10.0,
   "risk_off_cycles_completed": 0,
-  "years_elapsed": 0.15,
+  "years_elapsed": 0.16,
   "horizon_met": false,
   "verdict": "NOT_READY"
 }
