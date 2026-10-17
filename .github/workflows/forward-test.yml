@@ -1,9 +1,6 @@
 name: forward-paper-test
 
 on:
-  schedule:
-    # 22:30 UTC = after US market close (16:30 ET during DST, 17:30 ET winter)
-    - cron: "30 22 * * 1-5"
   workflow_dispatch:
 
 permissions:
