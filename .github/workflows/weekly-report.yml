@@ -1,9 +1,6 @@
 name: weekly-email-report
 
 on:
-  schedule:
-    # Friday 23:00 UTC — after the weekly market close run
-    - cron: "0 23 * * 5"
   workflow_dispatch:
 
 permissions:
